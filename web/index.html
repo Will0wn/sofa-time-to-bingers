@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofa Time to Bingers</title>
+<style>
+    :root {
+        color-scheme: dark;
+        --bg: #000000;
+        --card: #121212;
+        --card-2: #1a1a1a;
+        --line: #262626;
+        --ink: #f2f2f2;
+        --dim: #9a9a9a;
+        --faint: #6a6a6a;
+        --ok: #56c98a;
+        --warn: #d9a441;
+        --bad: #e2685c;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+        margin: 0;
+        padding: 3rem 1.25rem 6rem;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 40rem; margin: 0 auto; }
+
+    h1 {
+        font-size: 2rem; line-height: 1.15; letter-spacing: -0.03em;
+        margin: 0 0 .75rem; font-weight: 700;
+    }
+    .lede { color: var(--dim); margin: 0 0 2.5rem; font-size: .975rem; }
+    .lede b { color: var(--ink); font-weight: 500; }
+
+    .card {
+        background: var(--card); border-radius: 16px;
+        padding: 1.4rem 1.4rem 1.5rem; margin-bottom: .85rem;
+    }
+    .card[aria-disabled="true"] { opacity: .38; pointer-events: none; }
+    .card > h2 {
+        font-size: .95rem; margin: 0 0 1rem; font-weight: 600;
+        display: flex; align-items: center; gap: .6rem;
+    }
+    .card > h2 i {
+        font-style: normal; font-size: .75rem; font-weight: 600;
+        width: 1.4rem; height: 1.4rem; border-radius: 50%;
+        background: var(--card-2); color: var(--dim);
+        display: grid; place-items: center; flex: none;
+    }
+
+    .drop {
+        background: var(--card-2); border: 1px solid var(--line); border-radius: 12px;
+        padding: 1.75rem 1rem; text-align: center; cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+    .drop:hover, .drop.over { border-color: #4a4a4a; background: #1f1f1f; }
+    .drop strong { display: block; font-weight: 550; font-size: .95rem; }
+    .drop span { color: var(--faint); font-size: .85rem; }
+    input[type=file] { display: none; }
+
+    .why { color: var(--dim); font-size: .9rem; margin: 0 0 .85rem; }
+    input[type=password], input[type=text] {
+        width: 100%; padding: .8rem .9rem; border-radius: 11px;
+        border: 1px solid var(--line); background: var(--card-2);
+        color: var(--ink); font: inherit; font-size: .95rem;
+    }
+    input::placeholder { color: #5a5a5a; }
+    input:focus-visible { outline: none; border-color: #5a5a5a; }
+    .hint { font-size: .84rem; color: var(--faint); margin: .65rem 0 0; }
+    a { color: var(--ink); text-decoration-color: #4a4a4a; text-underline-offset: 3px; }
+    a:hover { text-decoration-color: var(--ink); }
+
+    details { margin-top: 1.1rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+    summary { cursor: pointer; font-size: .9rem; color: var(--dim); list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: "+ "; color: var(--faint); }
+    details[open] summary::before { content: "\2212 "; }
+    details > div { padding-top: 1rem; }
+
+    button {
+        width: 100%; padding: .95rem 1rem; border: 0; border-radius: 999px;
+        background: var(--ink); color: #000; font: inherit; font-weight: 600;
+        font-size: .975rem; cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: #ffffff; }
+    button:disabled { opacity: .25; cursor: not-allowed; }
+
+    .files { list-style: none; padding: 0; margin: 1rem 0 0; font-size: .9rem; }
+    .files li {
+        display: flex; justify-content: space-between; gap: 1rem;
+        padding: .55rem 0; border-top: 1px solid var(--line);
+    }
+    .files li span:last-child { color: var(--faint); flex: none; }
+
+    .bar { height: 3px; border-radius: 2px; background: var(--card-2); overflow: hidden; margin: 1.2rem 0 .7rem; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .25s; }
+    .status { font-size: .89rem; color: var(--dim); margin: 0; font-variant-numeric: tabular-nums; }
+
+    .matched { margin: 1.35rem 0 0; }
+    .matched h3 {
+        font-size: .74rem; text-transform: uppercase; letter-spacing: .1em;
+        color: var(--faint); font-weight: 600; margin: 0 0 .3rem;
+    }
+    .row {
+        display: flex; align-items: baseline; gap: 1rem;
+        padding: .6rem 0; border-bottom: 1px solid var(--line);
+        font-variant-numeric: tabular-nums;
+    }
+    .row b { font-weight: 400; flex: 1; }
+    .row .pct { font-weight: 600; min-width: 3.6rem; text-align: right; }
+    .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+
+    .note {
+        font-size: .875rem; color: var(--dim); background: var(--card-2);
+        border-radius: 11px; padding: .8rem .9rem; margin-top: 1rem;
+    }
+    .missing { max-height: 10rem; overflow: auto; font-size: .85rem; color: var(--dim); margin-top: .7rem; }
+    .done { margin-top: 1.35rem; }
+    .done .hint { text-align: center; }
+
+    footer {
+        text-align: center; margin-top: 2.5rem;
+        font-size: .85rem; color: var(--faint);
+    }
+    footer a { color: var(--dim); }
+
+    .backdrop {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0, 0, 0, .72);
+        display: grid; place-items: center; padding: 1.25rem;
+        animation: fade .22s ease-out;
+    }
+    .backdrop[hidden] { display: none; }
+    @keyframes fade { from { opacity: 0 } }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px) } }
+
+    .modal {
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+        padding: 1.9rem 1.7rem 1.5rem; max-width: 23rem; width: 100%;
+        text-align: center; animation: rise .28s cubic-bezier(.2, .8, .3, 1);
+    }
+    .modal .star { font-size: 1.9rem; line-height: 1; }
+    .modal h3 { font-size: 1.15rem; margin: .8rem 0 .5rem; font-weight: 650; letter-spacing: -.01em; }
+    .modal p { color: var(--dim); font-size: .92rem; margin: 0 0 1.35rem; }
+    .modal a.primary { display: block; text-decoration: none; }
+    .modal .later {
+        display: block; width: 100%; margin-top: .35rem; padding: .7rem;
+        background: none; color: var(--faint); font-size: .89rem; font-weight: 400;
+        border-radius: 999px;
+    }
+    .modal .later:hover { background: var(--card-2); color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+    <h1>Sofa Time to Bingers</h1>
+    <p class="lede">
+        Bingers imports TV Time, Trakt and Refract archives, but not Sofa Time ones. This page
+        rewrites a Sofa Time export into one of the formats Bingers does accept.
+        <b>Everything runs locally.</b> Your library is never uploaded. The only requests that
+        leave this page are id lookups to TMDB.
+    </p>
+
+    <section class="card" id="step1">
+        <h2><i>1</i> Your Sofa Time export</h2>
+        <div class="drop" id="sofaDrop">
+            <strong>Drop the .zip here</strong>
+            <span>or click to choose a file</span>
+        </div>
+        <input type="file" id="sofaInput" accept=".zip,application/zip">
+        <ul class="files" id="sofaFiles"></ul>
+    </section>
+
+    <section class="card" id="step2" aria-disabled="true">
+        <h2><i>2</i> TMDB API key</h2>
+        <p class="why">
+            Sofa Time and Bingers use different databases to identify shows and films. TMDB is the
+            only free service that can translate between the two, so the converter needs your own
+            key to look things up.
+        </p>
+        <input type="password" id="key" placeholder="v3 API key or v4 read access token"
+               autocomplete="off" spellcheck="false">
+        <p class="hint">
+            Free to get: sign in at
+            <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a>,
+            open Settings, then API. Either one works. Your key is saved only in this browser and
+            is sent to nobody but TMDB.
+        </p>
+
+        <details>
+            <summary>Already have an old TV Time export?</summary>
+            <div>
+                <div class="drop" id="tvtDrop">
+                    <strong>Drop TV Time exports here</strong>
+                    <span>Liberator, Refract or GDPR. You can add more than one.</span>
+                </div>
+                <input type="file" id="tvtInput" accept=".zip,application/zip" multiple>
+                <ul class="files" id="tvtFiles"></ul>
+                <p class="hint">
+                    The converter reuses the ids it finds in them, so it runs faster and makes fewer
+                    requests. Entirely optional, skip it if you have nothing to hand.
+                </p>
+            </div>
+        </details>
+    </section>
+
+    <section class="card" id="step3" aria-disabled="true">
+        <h2><i>3</i> Convert</h2>
+        <button id="go" disabled>Convert my library</button>
+        <div class="bar" id="bar" hidden><i></i></div>
+        <p class="status" id="status" hidden></p>
+        <div id="result" hidden></div>
+    </section>
+
+    <footer>
+        Crafted with &#9749; by
+        <a href="https://github.com/Will0wn" target="_blank" rel="noopener">Will0wn</a>
+    </footer>
+</main>
+
+<div class="backdrop" id="starModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="starTitle">
+        <div class="star">&#11088;</div>
+        <h3 id="starTitle">Was this useful?</h3>
+        <p>Leave a star, it takes a second.</p>
+        <a class="primary" id="starLink" target="_blank" rel="noopener">
+            <button>Leave a star</button>
+        </a>
+        <button class="later" id="starLater">No thanks</button>
+    </div>
+</div>
+
+<script type="module">
+/* BUNDLE */
+</script>
+</body>
+</html>

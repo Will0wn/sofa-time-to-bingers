@@ -1,0 +1,10 @@
+# Dependencies and scratch
+node_modules/
+.cache/
+.tmp/
+
+# Personal data: never commit anyone's library
+samples/
+*.zip
+report*.json
+*.local.*

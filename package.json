@@ -1,0 +1,32 @@
+{
+    "name": "sofa-time-to-bingers",
+    "version": "0.1.0",
+    "description": "Convert a Sofa Time export into a TV Time Liberator archive, so it can be imported into Bingers.",
+    "type": "module",
+    "license": "GPL-3.0-only",
+    "bin": {
+        "sofa-time-to-bingers": "bin/sofa2ttl.mjs"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "build": "node build.mjs",
+        "test": "node test/run.mjs"
+    },
+    "files": [
+        "bin",
+        "src",
+        "docs"
+    ],
+    "keywords": [
+        "sofa-time",
+        "tv-time",
+        "tv-time-liberator",
+        "bingers",
+        "refract",
+        "trakt",
+        "export",
+        "migration"
+    ]
+}

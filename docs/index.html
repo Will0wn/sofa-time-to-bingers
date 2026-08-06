@@ -1,0 +1,1612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofa Time to Bingers</title>
+<style>
+    :root {
+        color-scheme: dark;
+        --bg: #000000;
+        --card: #121212;
+        --card-2: #1a1a1a;
+        --line: #262626;
+        --ink: #f2f2f2;
+        --dim: #9a9a9a;
+        --faint: #6a6a6a;
+        --ok: #56c98a;
+        --warn: #d9a441;
+        --bad: #e2685c;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+        margin: 0;
+        padding: 3rem 1.25rem 6rem;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 40rem; margin: 0 auto; }
+
+    h1 {
+        font-size: 2rem; line-height: 1.15; letter-spacing: -0.03em;
+        margin: 0 0 .75rem; font-weight: 700;
+    }
+    .lede { color: var(--dim); margin: 0 0 2.5rem; font-size: .975rem; }
+    .lede b { color: var(--ink); font-weight: 500; }
+
+    .card {
+        background: var(--card); border-radius: 16px;
+        padding: 1.4rem 1.4rem 1.5rem; margin-bottom: .85rem;
+    }
+    .card[aria-disabled="true"] { opacity: .38; pointer-events: none; }
+    .card > h2 {
+        font-size: .95rem; margin: 0 0 1rem; font-weight: 600;
+        display: flex; align-items: center; gap: .6rem;
+    }
+    .card > h2 i {
+        font-style: normal; font-size: .75rem; font-weight: 600;
+        width: 1.4rem; height: 1.4rem; border-radius: 50%;
+        background: var(--card-2); color: var(--dim);
+        display: grid; place-items: center; flex: none;
+    }
+
+    .drop {
+        background: var(--card-2); border: 1px solid var(--line); border-radius: 12px;
+        padding: 1.75rem 1rem; text-align: center; cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+    .drop:hover, .drop.over { border-color: #4a4a4a; background: #1f1f1f; }
+    .drop strong { display: block; font-weight: 550; font-size: .95rem; }
+    .drop span { color: var(--faint); font-size: .85rem; }
+    input[type=file] { display: none; }
+
+    .why { color: var(--dim); font-size: .9rem; margin: 0 0 .85rem; }
+    input[type=password], input[type=text] {
+        width: 100%; padding: .8rem .9rem; border-radius: 11px;
+        border: 1px solid var(--line); background: var(--card-2);
+        color: var(--ink); font: inherit; font-size: .95rem;
+    }
+    input::placeholder { color: #5a5a5a; }
+    input:focus-visible { outline: none; border-color: #5a5a5a; }
+    .hint { font-size: .84rem; color: var(--faint); margin: .65rem 0 0; }
+    a { color: var(--ink); text-decoration-color: #4a4a4a; text-underline-offset: 3px; }
+    a:hover { text-decoration-color: var(--ink); }
+
+    details { margin-top: 1.1rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+    summary { cursor: pointer; font-size: .9rem; color: var(--dim); list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: "+ "; color: var(--faint); }
+    details[open] summary::before { content: "\2212 "; }
+    details > div { padding-top: 1rem; }
+
+    button {
+        width: 100%; padding: .95rem 1rem; border: 0; border-radius: 999px;
+        background: var(--ink); color: #000; font: inherit; font-weight: 600;
+        font-size: .975rem; cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: #ffffff; }
+    button:disabled { opacity: .25; cursor: not-allowed; }
+
+    .files { list-style: none; padding: 0; margin: 1rem 0 0; font-size: .9rem; }
+    .files li {
+        display: flex; justify-content: space-between; gap: 1rem;
+        padding: .55rem 0; border-top: 1px solid var(--line);
+    }
+    .files li span:last-child { color: var(--faint); flex: none; }
+
+    .bar { height: 3px; border-radius: 2px; background: var(--card-2); overflow: hidden; margin: 1.2rem 0 .7rem; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .25s; }
+    .status { font-size: .89rem; color: var(--dim); margin: 0; font-variant-numeric: tabular-nums; }
+
+    .matched { margin: 1.35rem 0 0; }
+    .matched h3 {
+        font-size: .74rem; text-transform: uppercase; letter-spacing: .1em;
+        color: var(--faint); font-weight: 600; margin: 0 0 .3rem;
+    }
+    .row {
+        display: flex; align-items: baseline; gap: 1rem;
+        padding: .6rem 0; border-bottom: 1px solid var(--line);
+        font-variant-numeric: tabular-nums;
+    }
+    .row b { font-weight: 400; flex: 1; }
+    .row .pct { font-weight: 600; min-width: 3.6rem; text-align: right; }
+    .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+
+    .note {
+        font-size: .875rem; color: var(--dim); background: var(--card-2);
+        border-radius: 11px; padding: .8rem .9rem; margin-top: 1rem;
+    }
+    .missing { max-height: 10rem; overflow: auto; font-size: .85rem; color: var(--dim); margin-top: .7rem; }
+    .done { margin-top: 1.35rem; }
+    .done .hint { text-align: center; }
+
+    footer {
+        text-align: center; margin-top: 2.5rem;
+        font-size: .85rem; color: var(--faint);
+    }
+    footer a { color: var(--dim); }
+
+    .backdrop {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0, 0, 0, .72);
+        display: grid; place-items: center; padding: 1.25rem;
+        animation: fade .22s ease-out;
+    }
+    .backdrop[hidden] { display: none; }
+    @keyframes fade { from { opacity: 0 } }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px) } }
+
+    .modal {
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+        padding: 1.9rem 1.7rem 1.5rem; max-width: 23rem; width: 100%;
+        text-align: center; animation: rise .28s cubic-bezier(.2, .8, .3, 1);
+    }
+    .modal .star { font-size: 1.9rem; line-height: 1; }
+    .modal h3 { font-size: 1.15rem; margin: .8rem 0 .5rem; font-weight: 650; letter-spacing: -.01em; }
+    .modal p { color: var(--dim); font-size: .92rem; margin: 0 0 1.35rem; }
+    .modal a.primary { display: block; text-decoration: none; }
+    .modal .later {
+        display: block; width: 100%; margin-top: .35rem; padding: .7rem;
+        background: none; color: var(--faint); font-size: .89rem; font-weight: 400;
+        border-radius: 999px;
+    }
+    .modal .later:hover { background: var(--card-2); color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+    <h1>Sofa Time to Bingers</h1>
+    <p class="lede">
+        Bingers imports TV Time, Trakt and Refract archives, but not Sofa Time ones. This page
+        rewrites a Sofa Time export into one of the formats Bingers does accept.
+        <b>Everything runs locally.</b> Your library is never uploaded. The only requests that
+        leave this page are id lookups to TMDB.
+    </p>
+
+    <section class="card" id="step1">
+        <h2><i>1</i> Your Sofa Time export</h2>
+        <div class="drop" id="sofaDrop">
+            <strong>Drop the .zip here</strong>
+            <span>or click to choose a file</span>
+        </div>
+        <input type="file" id="sofaInput" accept=".zip,application/zip">
+        <ul class="files" id="sofaFiles"></ul>
+    </section>
+
+    <section class="card" id="step2" aria-disabled="true">
+        <h2><i>2</i> TMDB API key</h2>
+        <p class="why">
+            Sofa Time and Bingers use different databases to identify shows and films. TMDB is the
+            only free service that can translate between the two, so the converter needs your own
+            key to look things up.
+        </p>
+        <input type="password" id="key" placeholder="v3 API key or v4 read access token"
+               autocomplete="off" spellcheck="false">
+        <p class="hint">
+            Free to get: sign in at
+            <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a>,
+            open Settings, then API. Either one works. Your key is saved only in this browser and
+            is sent to nobody but TMDB.
+        </p>
+
+        <details>
+            <summary>Already have an old TV Time export?</summary>
+            <div>
+                <div class="drop" id="tvtDrop">
+                    <strong>Drop TV Time exports here</strong>
+                    <span>Liberator, Refract or GDPR. You can add more than one.</span>
+                </div>
+                <input type="file" id="tvtInput" accept=".zip,application/zip" multiple>
+                <ul class="files" id="tvtFiles"></ul>
+                <p class="hint">
+                    The converter reuses the ids it finds in them, so it runs faster and makes fewer
+                    requests. Entirely optional, skip it if you have nothing to hand.
+                </p>
+            </div>
+        </details>
+    </section>
+
+    <section class="card" id="step3" aria-disabled="true">
+        <h2><i>3</i> Convert</h2>
+        <button id="go" disabled>Convert my library</button>
+        <div class="bar" id="bar" hidden><i></i></div>
+        <p class="status" id="status" hidden></p>
+        <div id="result" hidden></div>
+    </section>
+
+    <footer>
+        Crafted with &#9749; by
+        <a href="https://github.com/Will0wn" target="_blank" rel="noopener">Will0wn</a>
+    </footer>
+</main>
+
+<div class="backdrop" id="starModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="starTitle">
+        <div class="star">&#11088;</div>
+        <h3 id="starTitle">Was this useful?</h3>
+        <p>Leave a star, it takes a second.</p>
+        <a class="primary" id="starLink" target="_blank" rel="noopener">
+            <button>Leave a star</button>
+        </a>
+        <button class="later" id="starLater">No thanks</button>
+    </div>
+</div>
+
+<script type="module">
+// ---------- src/csv.mjs ----------
+/**
+ * CSV helpers matching the exact output of @std/csv's `stringify`, which is
+ * what TV Time Liberator uses: CRLF line endings, a trailing CRLF, and quoting
+ * only when a field contains a delimiter, quote, or newline.
+ */
+
+function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (quoted) {
+            if (char !== '"') { field += char; continue; }
+            if (text[i + 1] === '"') { field += '"'; i++; continue; }
+            quoted = false;
+        } else if (char === '"') {
+            quoted = true;
+        } else if (char === ',') {
+            row.push(field); field = '';
+        } else if (char === '\n') {
+            row.push(field); field = ''; rows.push(row); row = [];
+        } else if (char !== '\r') {
+            field += char;
+        }
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+
+    const header = rows.shift() ?? [];
+    return rows
+        .filter(r => r.length === header.length)
+        .map(r => Object.fromEntries(header.map((h, i) => [h, r[i]])));
+}
+
+function escapeField(value) {
+    if (value == null) return '';
+    const text = typeof value === 'boolean' ? String(value) : String(value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function stringifyCsv(rows) {
+    return rows.map(row => row.map(escapeField).join(',')).join('\r\n') + '\r\n';
+}
+
+// ---------- src/zip.mjs ----------
+/**
+ * Minimal ZIP reader/writer using only Web platform APIs, so the exact same
+ * module runs in the browser and in Node 18+ (CompressionStream is global in
+ * both). No Buffer, no node:zlib, no dependencies.
+ *
+ * Entry order matters: Bingers sniffs the archive format by scanning the first
+ * 512 KB for marker filenames, so we control ordering explicitly rather than
+ * delegating to a library that may reorder entries.
+ */
+
+const LOCAL_SIG = 0x04034b50;
+const CENTRAL_SIG = 0x02014b50;
+const EOCD_SIG = 0x06054b50;
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+const CRC_TABLE = (() => {
+    const table = new Int32Array(256);
+    for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        table[i] = c;
+    }
+    return table;
+})();
+
+function crc32(bytes) {
+    let c = -1;
+    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ -1) >>> 0;
+}
+
+async function pipe(bytes, stream) {
+    const response = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+    return new Uint8Array(await response.arrayBuffer());
+}
+
+const deflateRaw = bytes => pipe(bytes, new CompressionStream('deflate-raw'));
+const inflateRaw = bytes => pipe(bytes, new DecompressionStream('deflate-raw'));
+
+function dosDateTime(date) {
+    // ZIP stores MS-DOS timestamps: epoch 1980, two-second resolution.
+    const year = Math.max(1980, date.getFullYear());
+    return {
+        time: (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1),
+        day: ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+    };
+}
+
+/**
+ * Reads a ZIP archive into a Map of filename -> Uint8Array.
+ * Handles the stored (0) and deflate (8) methods, which is all these exporters
+ * ever emit.
+ * @param {ArrayBuffer|Uint8Array} input
+ */
+async function readZip(input) {
+    const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+    let eocd = -1;
+    for (let i = bytes.length - 22; i >= 0; i--) {
+        if (view.getUint32(i, true) === EOCD_SIG) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('Not a ZIP archive (no end-of-central-directory record).');
+
+    const count = view.getUint16(eocd + 10, true);
+    let offset = view.getUint32(eocd + 16, true);
+    const files = new Map();
+
+    for (let i = 0; i < count; i++) {
+        if (view.getUint32(offset, true) !== CENTRAL_SIG) break;
+        const method = view.getUint16(offset + 10, true);
+        const compressedSize = view.getUint32(offset + 20, true);
+        const nameLength = view.getUint16(offset + 28, true);
+        const extraLength = view.getUint16(offset + 30, true);
+        const commentLength = view.getUint16(offset + 32, true);
+        const localOffset = view.getUint32(offset + 42, true);
+        const name = decoder.decode(bytes.subarray(offset + 46, offset + 46 + nameLength));
+
+        // The local header repeats name/extra lengths and they may differ from
+        // the central directory's, so the data offset must be read from there.
+        const localNameLength = view.getUint16(localOffset + 26, true);
+        const localExtraLength = view.getUint16(localOffset + 28, true);
+        const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+        const raw = bytes.subarray(dataStart, dataStart + compressedSize);
+
+        if (!name.endsWith('/')) {
+            files.set(name, method === 8 ? await inflateRaw(raw) : raw.slice());
+        }
+        offset += 46 + nameLength + extraLength + commentLength;
+    }
+
+    return files;
+}
+
+/** Convenience: read a ZIP entry as UTF-8 text. */
+function textOf(bytes) {
+    return decoder.decode(bytes);
+}
+
+/**
+ * Writes entries, preserving the given order, into a ZIP archive.
+ * @param {Array<{name: string, data: Uint8Array|string}>} entries
+ * @returns {Promise<Uint8Array>}
+ */
+async function writeZip(entries, { date = new Date() } = {}) {
+    const { time, day } = dosDateTime(date);
+    const chunks = [];
+    const centrals = [];
+    let offset = 0;
+
+    for (const entry of entries) {
+        const name = encoder.encode(entry.name);
+        const data = typeof entry.data === 'string' ? encoder.encode(entry.data) : entry.data;
+        const compressed = await deflateRaw(data);
+        // Deflate can grow tiny or incompressible payloads; fall back to stored.
+        const useDeflate = compressed.length < data.length;
+        const payload = useDeflate ? compressed : data;
+        const method = useDeflate ? 8 : 0;
+        const crc = crc32(data);
+
+        const local = new Uint8Array(30);
+        const localView = new DataView(local.buffer);
+        localView.setUint32(0, LOCAL_SIG, true);
+        localView.setUint16(4, 20, true);       // version needed
+        localView.setUint16(6, 0x0800, true);   // UTF-8 filename flag
+        localView.setUint16(8, method, true);
+        localView.setUint16(10, time, true);
+        localView.setUint16(12, day, true);
+        localView.setUint32(14, crc, true);
+        localView.setUint32(18, payload.length, true);
+        localView.setUint32(22, data.length, true);
+        localView.setUint16(26, name.length, true);
+        chunks.push(local, name, payload);
+
+        const central = new Uint8Array(46);
+        const centralView = new DataView(central.buffer);
+        centralView.setUint32(0, CENTRAL_SIG, true);
+        centralView.setUint16(4, 20, true);     // version made by
+        centralView.setUint16(6, 20, true);     // version needed
+        centralView.setUint16(8, 0x0800, true);
+        centralView.setUint16(10, method, true);
+        centralView.setUint16(12, time, true);
+        centralView.setUint16(14, day, true);
+        centralView.setUint32(16, crc, true);
+        centralView.setUint32(20, payload.length, true);
+        centralView.setUint32(24, data.length, true);
+        centralView.setUint16(28, name.length, true);
+        centralView.setUint32(42, offset, true);
+        centrals.push(central, name);
+
+        offset += local.length + name.length + payload.length;
+    }
+
+    const centralSize = centrals.reduce((sum, c) => sum + c.length, 0);
+    const eocd = new Uint8Array(22);
+    const eocdView = new DataView(eocd.buffer);
+    eocdView.setUint32(0, EOCD_SIG, true);
+    eocdView.setUint16(8, entries.length, true);
+    eocdView.setUint16(10, entries.length, true);
+    eocdView.setUint32(12, centralSize, true);
+    eocdView.setUint32(16, offset, true);
+
+    const all = [...chunks, ...centrals, eocd];
+    const total = all.reduce((sum, part) => sum + part.length, 0);
+    const out = new Uint8Array(total);
+    let cursor = 0;
+    for (const part of all) { out.set(part, cursor); cursor += part.length; }
+    return out;
+}
+
+// ---------- src/sofa.mjs ----------
+/**
+ * Parser for Sofa Time exports.
+ *
+ * The archive holds six arrays, one per bucket:
+ *   watched{Movie,Show}  watchlist{Movie,Show}  stopWatching{Movie,Show}
+ * Every record carries `tmdb` and `imdb`; episodes carry only a number, an
+ * `addedDate`, and an optional `rating`. There are no TVDB identifiers, which
+ * is the entire reason the resolver layer exists.
+ */
+
+const BUCKETS = [
+    { prefix: 'watchedMovie', kind: 'movie', origin: 'watched' },
+    { prefix: 'watchlistMovie', kind: 'movie', origin: 'watchlist' },
+    { prefix: 'stopWatchingMovie', kind: 'movie', origin: 'stopped' },
+    { prefix: 'watchedShow', kind: 'show', origin: 'watched' },
+    { prefix: 'watchlistShow', kind: 'show', origin: 'watchlist' },
+    { prefix: 'stopWatchingShow', kind: 'show', origin: 'stopped' },
+];
+
+/**
+ * A title can sit in more than one bucket. "Stopped" is an explicit user action
+ * so it outranks "watched", and anything outranks "watchlist": a show you have
+ * episodes for is not merely planned.
+ */
+const ORIGIN_PRIORITY = { stopped: 0, watched: 1, watchlist: 2 };
+
+/** Normalises a timestamp to the `...Z` form the Liberator format uses. */
+function toIsoZ(value) {
+    if (!value) return undefined;
+    if (/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(value)) return value;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+function normaliseSeasons(raw) {
+    return (raw ?? [])
+        .map(season => ({
+            number: Number(season.number ?? 0),
+            episodes: (season.episodes ?? [])
+                .map(episode => ({
+                    number: Number(episode.number),
+                    addedDate: toIsoZ(episode.addedDate),
+                    rating: episode.rating ?? null,
+                }))
+                .filter(episode => Number.isFinite(episode.number))
+                .sort((a, b) => a.number - b.number),
+        }))
+        .filter(season => Number.isFinite(season.number))
+        .sort((a, b) => a.number - b.number);
+}
+
+function normaliseRecord(raw, kind, origin) {
+    const record = {
+        tmdb: raw.tmdb == null ? null : Number(raw.tmdb),
+        imdb: raw.imdb && raw.imdb !== '' ? raw.imdb : null,
+        title: raw.title ?? 'Unknown',
+        addedDate: toIsoZ(raw.addedDate),
+        releaseDate: toIsoZ(raw.release_date),
+        runtime: raw.runtime ?? null,
+        genres: (raw.genres ?? []).filter(Boolean),
+        origin,
+    };
+    if (kind === 'show') record.seasons = normaliseSeasons(raw.seasons);
+    return record;
+}
+
+/**
+ * Folds two records for the same title into one: the strongest origin wins, and
+ * episode lists are unioned so a bucket that happens to carry extra watches
+ * (Sofa Time files a few watched episodes under the watchlist) never loses them.
+ */
+function mergeRecords(a, b) {
+    const [strong, weak] = ORIGIN_PRIORITY[a.origin] <= ORIGIN_PRIORITY[b.origin] ? [a, b] : [b, a];
+    const merged = { ...weak, ...strong };
+    merged.origin = strong.origin;
+    merged.addedDate = [a.addedDate, b.addedDate].filter(Boolean).sort()[0];
+
+    if (!a.seasons && !b.seasons) return merged;
+
+    const seasons = new Map();
+    for (const season of [...(strong.seasons ?? []), ...(weak.seasons ?? [])]) {
+        if (!seasons.has(season.number)) seasons.set(season.number, new Map());
+        const episodes = seasons.get(season.number);
+        for (const episode of season.episodes) {
+            const previous = episodes.get(episode.number);
+            if (!previous) { episodes.set(episode.number, episode); continue; }
+            // Keep the earliest watch date and any rating either copy carries.
+            episodes.set(episode.number, {
+                ...previous,
+                addedDate: [previous.addedDate, episode.addedDate].filter(Boolean).sort()[0],
+                rating: previous.rating ?? episode.rating ?? null,
+            });
+        }
+    }
+
+    merged.seasons = [...seasons.entries()]
+        .map(([number, episodes]) => ({
+            number,
+            episodes: [...episodes.values()].sort((x, y) => x.number - y.number),
+        }))
+        .sort((x, y) => x.number - y.number);
+    return merged;
+}
+
+/**
+ * @param {ArrayBuffer|Uint8Array|Map<string, Uint8Array>} input
+ *        a Sofa Time .zip, or an already-read map of filename -> bytes
+ */
+async function parseSofaExport(input) {
+    const files = input instanceof Map ? input : await readZip(input);
+    const movies = new Map();
+    const shows = new Map();
+
+    for (const { prefix, kind, origin } of BUCKETS) {
+        const name = [...files.keys()].find(file => {
+            const base = file.split('/').pop();
+            return base.startsWith(`${prefix}_`) || base === `${prefix}.json`;
+        });
+        if (!name) continue;
+
+        let records;
+        try {
+            records = JSON.parse(textOf(files.get(name)));
+        } catch (error) {
+            throw new Error(`Could not parse "${name}": ${error.message}`);
+        }
+        if (!Array.isArray(records)) continue;
+
+        const target = kind === 'movie' ? movies : shows;
+        for (const raw of records) {
+            const record = normaliseRecord(raw, kind, origin);
+            // Key on TMDB, falling back to IMDB then title for the rare record
+            // that carries neither (two watchlist shows in the reference data).
+            const key = record.tmdb != null ? `tmdb:${record.tmdb}`
+                : record.imdb ? `imdb:${record.imdb}`
+                    : `title:${record.title.toLowerCase()}`;
+
+            const existing = target.get(key);
+            if (!existing) { target.set(key, record); continue; }
+            target.set(key, mergeRecords(existing, record));
+        }
+    }
+
+    return { movies: [...movies.values()], shows: [...shows.values()] };
+}
+
+function countEpisodes(shows) {
+    return shows.reduce(
+        (total, show) => total + (show.seasons ?? []).reduce((sum, s) => sum + s.episodes.length, 0),
+        0,
+    );
+}
+
+// ---------- src/crosswalk.mjs ----------
+/**
+ * Builds a TMDB-free identifier crosswalk out of any TV Time export the user
+ * already has (Liberator, Refract, or the GDPR dump).
+ *
+ * None of those formats carry TMDB ids, so the only joins available are:
+ *   movies    -> IMDB id      (exact, reliable)
+ *   shows     -> title        (fuzzy; fails on localised titles)
+ *   episodes  -> tvdb + S/E   (exact, once the show is resolved)
+ *
+ * This is a best-effort accelerator that costs nothing and cuts the number of
+ * API lookups. The TMDB resolver remains the authority for anything it misses.
+ */
+
+
+/** Strips case, accents, and punctuation so "Re: ZERO" matches "Re ZERO". */
+function normaliseTitle(title) {
+    return (title ?? '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '');
+}
+
+function createCrosswalk() {
+    return {
+        movieByImdb: new Map(),   // imdb -> { tvdb, uuid }
+        showByTitle: new Map(),   // normalised title -> { tvdb, uuid }
+        episodeByKey: new Map(),  // `${showTvdb}|${season}|${episode}` -> tvdb
+        sources: [],
+    };
+}
+
+const findFile = (files, test) => [...files.keys()].find(name => test(name.split('/').pop()));
+const readJson = (files, name) => JSON.parse(textOf(files.get(name)));
+const readCsv = (files, name) => parseCsv(textOf(files.get(name)));
+
+function addShow(crosswalk, title, tvdb, uuid) {
+    const key = normaliseTitle(title);
+    const id = Number(tvdb);
+    if (!key || !Number.isFinite(id) || id <= 0) return;
+    const existing = crosswalk.showByTitle.get(key);
+    // Keep the first hit, but let a later source fill in a missing uuid.
+    if (existing) { if (!existing.uuid && uuid) existing.uuid = uuid; return; }
+    crosswalk.showByTitle.set(key, { tvdb: id, uuid: uuid ?? null });
+}
+
+function addEpisode(crosswalk, showTvdb, season, episode, tvdb) {
+    const id = Number(tvdb);
+    if (!Number.isFinite(id) || id <= 0) return;
+    crosswalk.episodeByKey.set(`${Number(showTvdb)}|${Number(season)}|${Number(episode)}`, id);
+}
+
+/**
+ * Feeds one TV Time export into the crosswalk. The export kind is detected from
+ * its filenames, so callers can pass archives in any order.
+ * @param {Map<string, Uint8Array>} files
+ */
+function addExport(crosswalk, files, label = 'export') {
+    let kind = null;
+
+    // --- TV Time Liberator: movies.json + shows.json ---
+    const moviesJson = findFile(files, name => name === 'movies.json');
+    const showsJson = findFile(files, name => name === 'shows.json');
+    if (moviesJson && showsJson) {
+        kind = 'liberator';
+        for (const movie of readJson(files, moviesJson)) {
+            const imdb = movie?.id?.imdb;
+            const tvdb = Number(movie?.id?.tvdb);
+            if (imdb && imdb !== '-1' && Number.isFinite(tvdb)) {
+                crosswalk.movieByImdb.set(imdb, { tvdb, uuid: movie.uuid ?? null });
+            }
+        }
+        for (const show of readJson(files, showsJson)) {
+            addShow(crosswalk, show.title, show?.id?.tvdb, show.uuid);
+            for (const season of show.seasons ?? []) {
+                for (const episode of season.episodes ?? []) {
+                    addEpisode(crosswalk, show?.id?.tvdb, season.number, episode.number, episode?.id?.tvdb);
+                }
+            }
+        }
+    }
+
+    // --- Refract browser extension: tvtime-*.csv ---
+    const refractMovies = findFile(files, name => /^tvtime-movies-.*\.csv$/.test(name));
+    const refractSeries = findFile(files, name => /^tvtime-series-\d.*\.csv$/.test(name));
+    const refractEpisodes = findFile(files, name => /^tvtime-series-episodes-.*\.csv$/.test(name));
+    if (refractMovies || refractSeries || refractEpisodes) {
+        kind = 'refract';
+        for (const movie of refractMovies ? readCsv(files, refractMovies) : []) {
+            const tvdb = Number(movie.tvdb_id);
+            if (movie.imdb_id && Number.isFinite(tvdb) && !crosswalk.movieByImdb.has(movie.imdb_id)) {
+                crosswalk.movieByImdb.set(movie.imdb_id, { tvdb, uuid: movie.uuid || null });
+            }
+        }
+        for (const show of refractSeries ? readCsv(files, refractSeries) : []) {
+            addShow(crosswalk, show.title, show.tvdb_id, show.uuid || null);
+        }
+        for (const episode of refractEpisodes ? readCsv(files, refractEpisodes) : []) {
+            addEpisode(crosswalk, episode.series_tvdb_id, episode.season, episode.episode, episode.tvdb_id);
+        }
+    }
+
+    // --- TV Time GDPR dump: titles + TVDB show ids only ---
+    for (const [file, titleKey, idKey] of [
+        ['followed_tv_show.csv', 'tv_show_name', 'tv_show_id'],
+        ['user_tv_show_data.csv', 'tv_show_name', 'tv_show_id'],
+        ['show_seen_episode_latest.csv', 'tv_show_name', 'tv_show_id'],
+    ]) {
+        const name = findFile(files, base => base === file);
+        if (!name) continue;
+        kind = 'gdpr';
+        for (const row of readCsv(files, name)) addShow(crosswalk, row[titleKey], row[idKey], null);
+    }
+
+    if (kind) crosswalk.sources.push({ label, kind });
+    return kind;
+}
+
+function crosswalkStats(crosswalk) {
+    return {
+        movies: crosswalk.movieByImdb.size,
+        shows: crosswalk.showByTitle.size,
+        episodes: crosswalk.episodeByKey.size,
+        sources: crosswalk.sources,
+    };
+}
+
+// ---------- src/resolver.mjs ----------
+/**
+ * TMDB -> TVDB identifier resolution.
+ *
+ * Sofa Time speaks TMDB; every TV Time-derived format (Liberator, Refract,
+ * GDPR) speaks TVDB. TMDB's `external_ids` is the bridge.
+ *
+ * TMDB documents its limit as "somewhere in the 40 requests per second range",
+ * with no daily cap, and answers 429 when exceeded. We therefore run a bounded
+ * pool well under that ceiling, honour 429 (Retry-After when present, capped
+ * exponential backoff otherwise), and persist every lookup so a re-run or a
+ * resume after an interruption costs nothing.
+ */
+
+const API = 'https://api.themoviedb.org/3';
+const MAX_ATTEMPTS = 5;
+
+/** v4 read access tokens are JWTs and go in the header; v3 keys are query params. */
+function authFor(apiKey) {
+    const isJwt = /^ey[\w-]+\.[\w-]+\.[\w-]+$/.test(apiKey.trim());
+    return isJwt
+        ? { headers: { Authorization: `Bearer ${apiKey.trim()}` }, query: '' }
+        : { headers: {}, query: `api_key=${encodeURIComponent(apiKey.trim())}` };
+}
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/** Runs `worker` over `items` with bounded concurrency, preserving order. */
+async function pool(items, concurrency, worker) {
+    const results = new Array(items.length);
+    let cursor = 0;
+    const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+        while (cursor < items.length) {
+            const index = cursor++;
+            results[index] = await worker(items[index], index);
+        }
+    });
+    await Promise.all(runners);
+    return results;
+}
+
+function createResolver({
+    apiKey,
+    cache = new Map(),
+    concurrency = 16,
+    onProgress = () => {},
+    fetchImpl = globalThis.fetch,
+} = {}) {
+    const auth = apiKey ? authFor(apiKey) : null;
+    let calls = 0;
+    let cacheHits = 0;
+
+    async function get(path) {
+        if (!auth) return null;
+        if (cache.has(path)) { cacheHits++; return cache.get(path); }
+
+        const separator = path.includes('?') ? '&' : '?';
+        const url = `${API}${path}${auth.query ? separator + auth.query : ''}`;
+
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            let response;
+            try {
+                calls++;
+                response = await fetchImpl(url, { headers: auth.headers });
+            } catch (error) {
+                if (attempt === MAX_ATTEMPTS) throw error;
+                await sleep(Math.min(2 ** attempt * 250, 8000));
+                continue;
+            }
+
+            if (response.status === 429) {
+                const retryAfter = Number(response.headers.get('retry-after'));
+                await sleep(Number.isFinite(retryAfter) && retryAfter > 0
+                    ? retryAfter * 1000 + 250
+                    : Math.min(2 ** attempt * 500, 10000));
+                continue;
+            }
+            // 404 is a legitimate answer: the id simply is not in TMDB.
+            if (response.status === 404) { cache.set(path, null); return null; }
+            if (response.status === 401) {
+                throw new Error('TMDB did not accept that key. Check you copied it in full, then try again.');
+            }
+            if (!response.ok) {
+                if (attempt === MAX_ATTEMPTS) return null;
+                await sleep(Math.min(2 ** attempt * 500, 10000));
+                continue;
+            }
+
+            const body = await response.json();
+            cache.set(path, body);
+            return body;
+        }
+        return null;
+    }
+
+    return {
+        get stats() { return { calls, cacheHits, cached: cache.size }; },
+        get enabled() { return Boolean(auth); },
+
+        /**
+         * Fills in `tvdb` and `totalEpisodes` on each show.
+         * `totalEpisodes` drives the up_to_date / continuing status decision.
+         */
+        async resolveShows(shows) {
+            let done = 0;
+            await pool(shows, concurrency, async show => {
+                if (show.tvdb == null && show.tmdb != null) {
+                    const data = await get(`/tv/${show.tmdb}?append_to_response=external_ids`);
+                    const tvdb = Number(data?.external_ids?.tvdb_id);
+                    if (Number.isFinite(tvdb) && tvdb > 0) show.tvdb = tvdb;
+                    if (!show.imdb && data?.external_ids?.imdb_id) show.imdb = data.external_ids.imdb_id;
+                    if (Number.isFinite(data?.number_of_episodes)) show.totalEpisodes = data.number_of_episodes;
+                }
+                onProgress({ phase: 'shows', done: ++done, total: shows.length, title: show.title });
+            });
+            return shows;
+        },
+
+        /**
+         * TMDB exposes no TVDB id for movies, so this only backfills a missing
+         * IMDB id, which is the identifier the Liberator format leans on for
+         * movies anyway.
+         */
+        async resolveMovies(movies) {
+            const pending = movies.filter(movie => !movie.imdb && movie.tmdb != null);
+            let done = 0;
+            await pool(pending, concurrency, async movie => {
+                const data = await get(`/movie/${movie.tmdb}/external_ids`);
+                if (data?.imdb_id) movie.imdb = data.imdb_id;
+                onProgress({ phase: 'movies', done: ++done, total: pending.length, title: movie.title });
+            });
+            return movies;
+        },
+
+        /**
+         * Opt-in: one call per unresolved episode. Only worth running if the
+         * target importer keys episodes on TVDB ids rather than season/episode
+         * numbers.
+         */
+        async resolveEpisodes(shows) {
+            const pending = [];
+            for (const show of shows) {
+                if (show.tmdb == null) continue;
+                for (const season of show.seasons ?? []) {
+                    for (const episode of season.episodes ?? []) {
+                        if (episode.tvdb == null) pending.push({ show, season, episode });
+                    }
+                }
+            }
+            let done = 0;
+            await pool(pending, concurrency, async ({ show, season, episode }) => {
+                const data = await get(
+                    `/tv/${show.tmdb}/season/${season.number}/episode/${episode.number}/external_ids`,
+                );
+                const tvdb = Number(data?.tvdb_id);
+                if (Number.isFinite(tvdb) && tvdb > 0) episode.tvdb = tvdb;
+                onProgress({ phase: 'episodes', done: ++done, total: pending.length, title: show.title });
+            });
+            return shows;
+        },
+    };
+}
+
+// ---------- src/liberator.mjs ----------
+/**
+ * Emits a TV Time Liberator archive.
+ *
+ * The layout mirrors the Liberator CLI byte for byte: six files, 4-space JSON
+ * for movies/shows, 2-space for favorites/lists, and a CRLF CSV produced the
+ * same way @std/csv's `stringify` produces it.
+ *
+ * Bingers detects the format by scanning the first 512 KB of the archive for
+ * "activity_history.csv" plus the required "shows.json" and "movies.json", so
+ * entry order is chosen to keep all three well inside that window.
+ */
+
+const CSV_HEADER = [
+    'imdb_id', 'tvdb_id', 'type', 'title', 'season', 'episode',
+    'is_special', 'is_watched', 'watched_at', 'status', 'is_watchlisted', 'rating',
+];
+
+const MARKER_WINDOW = 512 * 1024;
+const MARKERS = ['activity_history.csv', 'shows.json', 'movies.json'];
+
+/**
+ * Deterministic UUID derived from a stable key, so re-running the converter
+ * produces byte-identical output. Not cryptographic; it only needs to avoid
+ * collisions across a few thousand items.
+ */
+function stableUuid(key) {
+    const words = [];
+    for (const seed of [0x811c9dc5, 0x01000193, 0x9e3779b9, 0x85ebca6b]) {
+        let hash = seed >>> 0;
+        for (let i = 0; i < key.length; i++) {
+            hash ^= key.charCodeAt(i);
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+            hash = (hash ^ (hash >>> 13)) >>> 0;
+        }
+        words.push(hash.toString(16).padStart(8, '0'));
+    }
+    const hex = words.join('');
+    return [
+        hex.slice(0, 8),
+        hex.slice(8, 12),
+        `4${hex.slice(13, 16)}`,                                        // version 4
+        ((parseInt(hex[16], 16) & 0x3 | 0x8).toString(16)) + hex.slice(17, 20), // variant
+        hex.slice(20, 32),
+    ].join('-');
+}
+
+const IMDB_NONE = '-1';
+const TVDB_NONE = -1;
+
+function showStatus(show) {
+    if (show.origin === 'stopped') return 'stopped';
+    if (show.origin === 'watchlist') return 'not_started_yet';
+    if (Number.isFinite(show.totalEpisodes)) {
+        return show.watchedCount >= show.totalEpisodes ? 'up_to_date' : 'continuing';
+    }
+    return 'up_to_date';
+}
+
+/**
+ * @param {{movies: Array, shows: Array}} library resolved Sofa records
+ * @returns {{movies: Array, shows: Array, list: object}} Liberator-shaped data
+ */
+function toLiberatorModel({ movies, shows }) {
+    const outMovies = movies.map(movie => {
+        const watched = movie.origin !== 'watchlist';
+        const entry = {
+            id: {
+                tvdb: Number.isFinite(movie.tvdb) ? movie.tvdb : TVDB_NONE,
+                imdb: movie.imdb ?? IMDB_NONE,
+            },
+            created_at: movie.addedDate,
+            uuid: movie.uuid ?? stableUuid(`movie:${movie.tmdb ?? movie.imdb ?? movie.title}`),
+            title: movie.title,
+        };
+        // The reference export omits watched_at entirely on unwatched movies.
+        if (watched && movie.addedDate) entry.watched_at = movie.addedDate;
+        entry.is_watched = watched;
+        entry.rating = movie.rating ?? null;
+        return entry;
+    });
+
+    const outShows = shows.map(show => {
+        const watchedCount = (show.seasons ?? [])
+            .reduce((sum, season) => sum + season.episodes.length, 0);
+        const withCount = { ...show, watchedCount };
+
+        return {
+            uuid: show.uuid ?? stableUuid(`show:${show.tmdb ?? show.imdb ?? show.title}`),
+            id: {
+                tvdb: Number.isFinite(show.tvdb) ? show.tvdb : TVDB_NONE,
+                imdb: show.imdb ?? IMDB_NONE,
+            },
+            seasons: (show.seasons ?? []).map(season => ({
+                number: season.number,
+                episodes: season.episodes.map(episode => ({
+                    id: {
+                        tvdb: Number.isFinite(episode.tvdb) ? episode.tvdb : TVDB_NONE,
+                        imdb: IMDB_NONE,
+                    },
+                    number: episode.number,
+                    special: season.number === 0,
+                    // Sofa Time only ever exports episodes the user watched.
+                    is_watched: show.origin !== 'watchlist',
+                    watched_at: episode.addedDate ?? show.addedDate ?? null,
+                    rating: episode.rating ?? null,
+                })),
+            })),
+            created_at: show.addedDate,
+            title: show.title,
+            status: showStatus(withCount),
+            // Not part of the Liberator schema; consumed by toCsv below and
+            // stripped before serialisation.
+            _isWatchlisted: show.origin === 'watchlist'
+                || (Number.isFinite(show.totalEpisodes) && watchedCount < show.totalEpisodes),
+        };
+    });
+
+    return {
+        movies: outMovies,
+        shows: outShows,
+        list: {
+            name: 'Favorites',
+            description: 'Your favorite movies and shows.',
+            is_public: true,
+            movies: [],
+            shows: [],
+        },
+    };
+}
+
+/** Reproduces TV Time Liberator's `toCsv`: movie rows, then episodes, then shows. */
+function toCsv({ movies = [], shows = [] }) {
+    const movieRows = movies.map(movie => [
+        movie.id?.imdb, movie.id?.tvdb, 'movie', movie.title, '', '',
+        false, movie.is_watched, movie.watched_at ?? '', '',
+        movie.watched_at == null, movie.rating ?? '',
+    ]);
+
+    const episodeRows = shows.flatMap(show =>
+        (show.seasons ?? []).flatMap(season =>
+            season.episodes
+                .filter(episode => episode.is_watched)
+                .map(episode => [
+                    episode.id?.imdb, episode.id?.tvdb, 'episode', show.title,
+                    season.number, episode.number, episode.special, episode.is_watched,
+                    episode.watched_at ?? '', show.status,
+                    episode.watched_at == null, episode.rating ?? '',
+                ]),
+        ),
+    );
+
+    const showRows = shows.map(show => [
+        show.id?.imdb, show.id?.tvdb, 'show', show.title, '', '', '', '', '',
+        show.status, show._isWatchlisted ?? false, '',
+    ]);
+
+    return stringifyCsv([CSV_HEADER, ...movieRows, ...episodeRows, ...showRows]);
+}
+
+/** Builds the six files of the archive, in the order they should be zipped. */
+function buildLiberatorFiles(library) {
+    const model = toLiberatorModel(library);
+    const activity = toCsv(model);
+    const strip = ({ _isWatchlisted, ...show }) => show;
+    const shows = model.shows.map(strip);
+
+    // Alphabetical, matching the reference export, and with the two large files
+    // last so every marker filename lands inside Bingers' 512 KB sniff window.
+    return [
+        { name: 'activity_history.csv', data: activity },
+        { name: 'favorites.csv', data: toCsv({ movies: [], shows: [] }) },
+        { name: 'favorites.json', data: JSON.stringify(model.list, null, 2) },
+        { name: 'lists.json', data: '[]' },
+        { name: 'movies.json', data: JSON.stringify(model.movies, null, 4) },
+        { name: 'shows.json', data: JSON.stringify(shows, null, 4) },
+    ];
+}
+
+/**
+ * Verifies the produced archive is what Bingers will classify as
+ * "tvtime-liberator": all markers must appear within the first 512 KB.
+ */
+function verifyMarkers(zipBytes) {
+    const window = zipBytes.subarray(0, MARKER_WINDOW);
+    const text = new TextDecoder('latin1').decode(window);
+    const missing = MARKERS.filter(marker => !text.includes(marker));
+    return { ok: missing.length === 0, missing };
+}
+
+// ---------- src/convert.mjs ----------
+/**
+ * Orchestrates the Sofa Time -> TV Time Liberator conversion.
+ * Runtime-agnostic: the browser page and the CLI both call `convert`.
+ */
+
+
+
+
+
+/** Applies the crosswalk in place and reports how much it covered. */
+function applyCrosswalk(library, crosswalk) {
+    let movies = 0;
+    let shows = 0;
+    let episodes = 0;
+
+    for (const movie of library.movies) {
+        const hit = movie.imdb ? crosswalk.movieByImdb.get(movie.imdb) : null;
+        if (!hit) continue;
+        movie.tvdb = hit.tvdb;
+        movie.uuid ??= hit.uuid ?? undefined;
+        movies++;
+    }
+
+    for (const show of library.shows) {
+        const hit = crosswalk.showByTitle.get(normaliseTitle(show.title));
+        if (!hit) continue;
+        show.tvdb = hit.tvdb;
+        show.uuid ??= hit.uuid ?? undefined;
+        shows++;
+    }
+
+    // Episode ids depend on the show already having a TVDB id.
+    for (const show of library.shows) {
+        if (!Number.isFinite(show.tvdb)) continue;
+        for (const season of show.seasons ?? []) {
+            for (const episode of season.episodes) {
+                const hit = crosswalk.episodeByKey.get(`${show.tvdb}|${season.number}|${episode.number}`);
+                if (hit == null) continue;
+                episode.tvdb = hit;
+                episodes++;
+            }
+        }
+    }
+
+    return { movies, shows, episodes };
+}
+
+/** Second crosswalk pass: shows that only got a TVDB id from TMDB. */
+function applyEpisodeCrosswalk(library, crosswalk) {
+    let episodes = 0;
+    for (const show of library.shows) {
+        if (!Number.isFinite(show.tvdb)) continue;
+        for (const season of show.seasons ?? []) {
+            for (const episode of season.episodes) {
+                if (episode.tvdb != null) continue;
+                const hit = crosswalk.episodeByKey.get(`${show.tvdb}|${season.number}|${episode.number}`);
+                if (hit == null) continue;
+                episode.tvdb = hit;
+                episodes++;
+            }
+        }
+    }
+    return episodes;
+}
+
+function coverage(library) {
+    const shows = library.shows.filter(show => Number.isFinite(show.tvdb)).length;
+    const movies = library.movies.filter(
+        movie => Number.isFinite(movie.tvdb) || movie.imdb,
+    ).length;
+
+    let episodes = 0;
+    let episodesTotal = 0;
+    for (const show of library.shows) {
+        for (const season of show.seasons ?? []) {
+            for (const episode of season.episodes) {
+                episodesTotal++;
+                if (Number.isFinite(episode.tvdb)) episodes++;
+            }
+        }
+    }
+
+    return {
+        shows: { resolved: shows, total: library.shows.length },
+        movies: { resolved: movies, total: library.movies.length },
+        episodes: { resolved: episodes, total: episodesTotal },
+    };
+}
+
+/**
+ * @param {object} options
+ * @param {ArrayBuffer|Uint8Array} options.sofaZip          the Sofa Time export
+ * @param {Array<Map<string, Uint8Array>>} [options.tvTimeExports] optional TV Time archives
+ * @param {string} [options.tmdbKey]                        TMDB v3 key or v4 token
+ * @param {boolean} [options.resolveEpisodeIds=true]        look up per-episode TVDB ids
+ * @param {Map} [options.cache]                             persistent TMDB response cache
+ * @param {(update: object) => void} [options.onProgress]
+ */
+async function convert({
+    sofaZip,
+    tvTimeExports = [],
+    tmdbKey = '',
+    resolveEpisodeIds = true,
+    cache = new Map(),
+    concurrency = 16,
+    onProgress = () => {},
+}) {
+    const report = { warnings: [] };
+
+    onProgress({ phase: 'parse', message: 'Reading your export' });
+    const library = await parseSofaExport(sofaZip);
+    report.input = {
+        movies: library.movies.length,
+        shows: library.shows.length,
+        episodes: countEpisodes(library.shows),
+    };
+
+    const crosswalk = createCrosswalk();
+    if (tvTimeExports.length) {
+        onProgress({ phase: 'crosswalk', message: 'Indexing your TV Time exports' });
+        for (const { files, label } of tvTimeExports) addExport(crosswalk, files, label);
+        report.crosswalk = applyCrosswalk(library, crosswalk);
+        report.crosswalkSources = crosswalk.sources;
+    }
+
+    const resolver = createResolver({ apiKey: tmdbKey, cache, concurrency, onProgress });
+    if (resolver.enabled) {
+        onProgress({ phase: 'shows', message: 'Matching shows on TMDB' });
+        await resolver.resolveShows(library.shows);
+        // Shows that TMDB just resolved may now match crosswalk episode ids.
+        if (tvTimeExports.length) applyEpisodeCrosswalk(library, crosswalk);
+
+        onProgress({ phase: 'movies', message: 'Matching movies' });
+        await resolver.resolveMovies(library.movies);
+
+        if (resolveEpisodeIds) {
+            onProgress({ phase: 'episodes', message: 'Matching episodes on TMDB' });
+            await resolver.resolveEpisodes(library.shows);
+        }
+        report.tmdb = resolver.stats;
+    } else {
+        report.warnings.push(
+            'Without a TMDB key the shows carry no id that Bingers can recognise, so most of your library will not import. Add a key and convert again.',
+        );
+    }
+
+    report.coverage = coverage(library);
+
+    // TMDB occasionally points two distinct entries at one TVDB id (a remake and
+    // its original, most often). The importer keys on TVDB, so those entries
+    // merge on arrival. Surface it rather than letting the counts look wrong.
+    const byTvdb = new Map();
+    for (const show of library.shows) {
+        if (!Number.isFinite(show.tvdb)) continue;
+        if (!byTvdb.has(show.tvdb)) byTvdb.set(show.tvdb, []);
+        byTvdb.get(show.tvdb).push(show);
+    }
+    const collisions = [...byTvdb.entries()]
+        .filter(([, group]) => group.length > 1)
+        .map(([tvdb, group]) => ({
+            tvdb,
+            titles: group.map(show => show.title),
+            // Episodes outside the first entry are the ones actually at risk.
+            episodesAtRisk: group
+                .map(show => (show.seasons ?? []).reduce((sum, s) => sum + s.episodes.length, 0))
+                .sort((a, b) => b - a)
+                .slice(1)
+                .reduce((sum, count) => sum + count, 0),
+        }));
+
+    if (collisions.length) {
+        report.tvdbCollisions = collisions;
+        const episodesAtRisk = collisions.reduce((sum, c) => sum + c.episodesAtRisk, 0);
+        report.warnings.push(
+            `${collisions.length} show${collisions.length === 1 ? '' : 's'} share an id with `
+            + `another entry, usually a remake and its original, so they will be combined into `
+            + `one when you import. `
+            + (episodesAtRisk
+                ? `About ${episodesAtRisk} episode${episodesAtRisk === 1 ? '' : 's'} may not come across.`
+                : 'None of your watch history is affected.'),
+        );
+    }
+    if (report.coverage.shows.resolved < report.coverage.shows.total) {
+        report.unresolvedShows = library.shows
+            .filter(show => !Number.isFinite(show.tvdb))
+            .map(show => show.title);
+    }
+
+    onProgress({ phase: 'build', message: 'Writing the archive' });
+    const files = buildLiberatorFiles(library);
+    const zip = await writeZip(files);
+
+    const markers = verifyMarkers(zip);
+    if (!markers.ok) {
+        report.warnings.push(
+            'This archive is missing something Bingers looks for, so it may not be recognised. '
+            + `Please report this as a bug (missing: ${markers.missing.join(', ')}).`,
+        );
+    }
+    report.markers = markers;
+    report.files = files.map(file => ({
+        name: file.name,
+        bytes: typeof file.data === 'string' ? new TextEncoder().encode(file.data).length : file.data.length,
+    }));
+    report.zipBytes = zip.length;
+
+    onProgress({ phase: 'done', message: 'Ready' });
+    return { zip, report, library };
+}
+
+// ---------- web/confetti.mjs ----------
+/**
+ * Full page confetti on a throwaway canvas. No dependencies, no library.
+ *
+ * Two cannons fire inward from the bottom corners, which is what fills the
+ * whole viewport rather than leaving a cloud around one button. The canvas is
+ * created on demand, sits above everything with pointer events off, and removes
+ * itself once the last piece has fallen out of view, so it cannot leak or
+ * intercept clicks.
+ */
+
+const COLOURS = ['#ffffff', '#f2c14e', '#56c98a', '#5aa9e6', '#e2685c', '#c58af9'];
+const GRAVITY = 0.29;
+const DRAG = 0.995;
+
+function makeCanvas() {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText =
+        'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:100';
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * ratio;
+    canvas.height = window.innerHeight * ratio;
+    document.body.appendChild(canvas);
+    const context = canvas.getContext('2d');
+    context.scale(ratio, ratio);
+    return { canvas, context };
+}
+
+/**
+ * @param {number} originX
+ * @param {number} originY
+ * @param {number} aim     centre angle in radians
+ * @param {number} count
+ * @param {boolean} gentle fewer, slower, no spin, for reduced-motion users
+ */
+function cannon(originX, originY, aim, count, gentle) {
+    const pieces = [];
+    for (let i = 0; i < count; i++) {
+        const angle = aim + (Math.random() - 0.5) * 1.15;
+        // Muzzle velocity stays the same for everyone: it is what carries the
+        // pieces across the viewport, and a slower version would just pile them
+        // up in the corners. Reduced motion means fewer pieces and no spinning,
+        // not a confetti burst that never leaves the launcher.
+        const speed = 31 + Math.random() * 23;
+        pieces.push({
+            x: originX,
+            y: originY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            width: 5 + Math.random() * 6,
+            height: 8 + Math.random() * 7,
+            spin: gentle ? 0 : (Math.random() - 0.5) * 0.3,
+            angle: Math.random() * Math.PI,
+            colour: COLOURS[(Math.random() * COLOURS.length) | 0],
+        });
+    }
+    return pieces;
+}
+
+/**
+ * Fires the celebration across the whole page.
+ * Motion-sensitive users get a smaller, slower, non-spinning version rather
+ * than nothing at all.
+ */
+function burstConfetti() {
+    const gentle = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const count = gentle ? 60 : 110;
+
+    const { canvas, context } = makeCanvas();
+    let pieces = [
+        // Bottom left, aimed up and to the right.
+        ...cannon(-10, height * 0.92, -Math.PI / 3.4, count, gentle),
+        // Bottom right, mirrored.
+        ...cannon(width + 10, height * 0.92, -Math.PI + Math.PI / 3.4, count, gentle),
+    ];
+
+    (function frame() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (const piece of pieces) {
+            piece.vx *= DRAG;
+            piece.vy = piece.vy * DRAG + GRAVITY;
+            piece.x += piece.vx;
+            piece.y += piece.vy;
+            piece.angle += piece.spin;
+
+            context.save();
+            context.translate(piece.x, piece.y);
+            context.rotate(piece.angle);
+            context.fillStyle = piece.colour;
+            // Squashing height by the spin fakes a paper flip cheaply.
+            context.fillRect(
+                -piece.width / 2, -piece.height / 2,
+                piece.width, piece.height * Math.abs(Math.cos(piece.angle)),
+            );
+            context.restore();
+        }
+
+        pieces = pieces.filter(piece => piece.y < height + 40);
+        if (pieces.length) requestAnimationFrame(frame);
+        else canvas.remove();
+    })();
+}
+
+// ---------- web/app.mjs ----------
+/**
+ * Browser front-end. Wires the three steps to the shared conversion core.
+ * The build step inlines src/*.mjs above this file, so `convert` and `readZip`
+ * are already in scope in the bundled page.
+ */
+
+
+
+const $ = id => document.getElementById(id);
+const KEY_STORAGE = 'sofaTimeToBingers.tmdbKey';
+const CACHE_STORAGE = 'sofaTimeToBingers.tmdbCache';
+const STAR_STORAGE = 'sofaTimeToBingers.starPrompted';
+const REPO_URL = 'https://github.com/Will0wn/sofa-time-to-bingers';
+
+const state = { sofa: null, tvtime: [] };
+
+const formatBytes = bytes => bytes > 1048576
+    ? `${(bytes / 1048576).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+/** Turns a drop zone plus a hidden input into one picker. */
+function wirePicker(dropId, inputId, onFiles) {
+    const drop = $(dropId);
+    const input = $(inputId);
+    drop.addEventListener('click', () => input.click());
+    drop.addEventListener('dragover', event => { event.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', event => {
+        event.preventDefault();
+        drop.classList.remove('over');
+        onFiles([...event.dataTransfer.files]);
+    });
+    input.addEventListener('change', () => onFiles([...input.files]));
+}
+
+function renderFiles(listId, files) {
+    $(listId).innerHTML = files
+        .map(file => `<li><span>${file.name}</span><span>${formatBytes(file.size)}</span></li>`)
+        .join('');
+}
+
+function refreshGate() {
+    $('step2').setAttribute('aria-disabled', String(!state.sofa));
+    $('step3').setAttribute('aria-disabled', String(!state.sofa));
+    $('go').disabled = !state.sofa;
+}
+
+wirePicker('sofaDrop', 'sofaInput', files => {
+    const zip = files.find(file => file.name.toLowerCase().endsWith('.zip'));
+    if (!zip) return;
+    state.sofa = zip;
+    renderFiles('sofaFiles', [zip]);
+    refreshGate();
+});
+
+wirePicker('tvtDrop', 'tvtInput', files => {
+    state.tvtime = files.filter(file => file.name.toLowerCase().endsWith('.zip'));
+    renderFiles('tvtFiles', state.tvtime);
+});
+
+$('key').value = localStorage.getItem(KEY_STORAGE) ?? '';
+$('key').addEventListener('change', event => localStorage.setItem(KEY_STORAGE, event.target.value.trim()));
+
+function loadCache() {
+    try {
+        return new Map(Object.entries(JSON.parse(sessionStorage.getItem(CACHE_STORAGE) ?? '{}')));
+    } catch {
+        return new Map();
+    }
+}
+
+function saveCache(cache) {
+    // Best effort: a large library can exceed the quota, which is harmless.
+    try {
+        sessionStorage.setItem(CACHE_STORAGE, JSON.stringify(Object.fromEntries(cache)));
+    } catch { /* ignore */ }
+}
+
+const PHASE_LABEL = {
+    parse: 'Reading your export',
+    crosswalk: 'Indexing your TV Time exports',
+    shows: 'Matching shows on TMDB',
+    movies: 'Matching movies',
+    episodes: 'Matching episodes on TMDB',
+    build: 'Writing the archive',
+    done: 'Ready',
+};
+
+function showProgress(update) {
+    $('bar').hidden = false;
+    $('status').hidden = false;
+    const label = PHASE_LABEL[update.phase] ?? update.phase ?? '';
+    if (update.total) {
+        $('bar').firstElementChild.style.width = `${(100 * update.done / update.total).toFixed(1)}%`;
+        $('status').textContent = `${label}, ${update.done.toLocaleString()} / ${update.total.toLocaleString()}`;
+    } else {
+        $('status').textContent = update.message ?? label;
+    }
+}
+
+function percentClass(resolved, total) {
+    if (!total) return 'warn';
+    const ratio = resolved / total;
+    return ratio > 0.97 ? 'ok' : ratio > 0.8 ? 'warn' : 'bad';
+}
+
+function renderReport(report, blobUrl, filename) {
+    const row = (name, { resolved, total }) => `
+        <div class="row">
+            <b>${name}</b>
+            <span>${resolved.toLocaleString()} of ${total.toLocaleString()}</span>
+            <span class="pct ${percentClass(resolved, total)}">${total ? (100 * resolved / total).toFixed(1) : '0'}%</span>
+        </div>`;
+
+    const warnings = report.warnings.map(text => `<p class="note">${text}</p>`).join('');
+    const unresolved = report.unresolvedShows?.length
+        ? `<details><summary>${report.unresolvedShows.length} shows we could not identify</summary>
+             <div class="missing">${report.unresolvedShows.join('<br>')}</div></details>`
+        : '';
+
+    $('result').hidden = false;
+    $('result').innerHTML = `
+        <div class="matched">
+            <h3>Recognised</h3>
+            ${row('Shows', report.coverage.shows)}
+            ${row('Movies', report.coverage.movies)}
+            ${row('Episodes', report.coverage.episodes)}
+        </div>
+        ${warnings}
+        ${unresolved}
+        <div class="done">
+            <a href="${blobUrl}" download="${filename}" id="download"><button>Download the archive</button></a>
+            <p class="hint">
+                ${formatBytes(report.zipBytes)}, checked and ready.
+                Upload it at <a href="https://bingers.app/import" target="_blank" rel="noopener">bingers.app/import</a>.
+            </p>
+        </div>`;
+
+    $('download').addEventListener('click', celebrate, { once: true });
+}
+
+/** Confetti on the download, then the star prompt once the dust settles. */
+function celebrate() {
+    burstConfetti();
+    if (localStorage.getItem(STAR_STORAGE)) return;
+    setTimeout(() => {
+        localStorage.setItem(STAR_STORAGE, '1');
+        $('starModal').hidden = false;
+    }, 1400);
+}
+
+function closeStarModal() {
+    $('starModal').hidden = true;
+}
+
+$('starLink').href = REPO_URL;
+$('starLink').addEventListener('click', closeStarModal);
+$('starLater').addEventListener('click', closeStarModal);
+$('starModal').addEventListener('click', event => {
+    if (event.target === $('starModal')) closeStarModal();
+});
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !$('starModal').hidden) closeStarModal();
+});
+
+$('go').addEventListener('click', async () => {
+    const button = $('go');
+    button.disabled = true;
+    $('result').hidden = true;
+
+    try {
+        const tvTimeExports = [];
+        for (const file of state.tvtime) {
+            tvTimeExports.push({ files: await readZip(await file.arrayBuffer()), label: file.name });
+        }
+
+        const cache = loadCache();
+        const { zip, report } = await convert({
+            sofaZip: await state.sofa.arrayBuffer(),
+            tvTimeExports,
+            tmdbKey: $('key').value.trim(),
+            resolveEpisodeIds: true,
+            cache,
+            onProgress: showProgress,
+        });
+        saveCache(cache);
+
+        const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));
+        renderReport(report, url, 'tv-time-liberator-export.zip');
+    } catch (error) {
+        $('status').hidden = false;
+        $('status').innerHTML = `<span class="bad">${error.message}</span>`;
+    } finally {
+        button.disabled = false;
+    }
+});
+
+refreshGate();
+</script>
+</body>
+</html>
